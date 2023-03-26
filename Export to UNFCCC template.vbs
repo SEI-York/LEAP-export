@@ -2,13 +2,181 @@
 Option Explicit   ' Requires all variables to be DIMmed
 '######################################################################################
 ' Define variables
+' objLEAPBranchList -> cache list of branches that has tags
 '######################################################################################
-DIM LEAP, objExcelApp, objExcelWb
+DIM LEAP, objExcelApp, objExcelWb, arrLEAPFuels, objLEAPBranchList
 DIM intYear : intYear = 2010
 ' Define pollutants, Pollutant Loadings in LEAP
 DIM strCO2 : strCO2 = "CO2"
 DIM strCH4 : strCH4 = "CH4"
 DIM strN2O : strN2O = "N2O"
+
+'######################################################################################
+' Define variables - Table 1 SECTORAL REPORT FOR ENERGY
+'######################################################################################
+FUNCTION GetCodesForSectoralReportForEnergy()
+    GetCodesForSectoralReportForEnergy = Array("1.A.1.", _
+                                "1.A.1.a.", "1.A.1.b.", "1.A.1.c.", _
+                                "1.A.2.", _
+                                "1.A.2.a.", "1.A.2.b.", "1.A.2.c.", "1.A.2.d.", "1.A.2.e.", "1.A.2.f.", "1.A.2.g.", _
+                                "1.A.3.", _
+                                "1.A.3.a.", "1.A.3.b.", "1.A.3.c.", "1.A.3.d.", "1.A.3.e.", _
+                                "1.A.4.", _
+                                "1.A.4.a.", "1.A.4.b.", "1.A.4.c.", _
+                                "1.A.5.", _
+                                "1.A.5.a.", "1.A.5.b.", _
+                                "1.B.1.", _
+                                "1.B.1.a.", "1.B.1.b.", "1.B.1.c.", _
+                                "1.B.2.", _
+                                "1.B.2.a.", "1.B.2.b.", "1.B.2.c.", "1.B.2.d.", _
+                                "1.C.1.", _
+                                "1.C.2.", _
+                                "1.C.3.", _
+                                "1.D.1.", _
+                                "1.D.1.a.", "1.D.1.b.", _
+                                "1.D.2.", _
+                                "1.D.3.", _
+                                "1.D.4.", _
+                                "1.D.4.a.", "1.D.4.b." _
+                                )
+END Function
+
+
+' Match column names in Table 1
+FUNCTION GetPollutantsForSectoralReportForEnergy()
+    GetPollutantsForSectoralReportForEnergy = Array(strCO2,_
+                                        strCH4, _
+                                        strN2O, _
+                                        "NOx", _
+                                        "CO", _
+                                        "NMVOC", _
+                                        "SO2")
+END FUNCTION
+
+FUNCTION GetFuelsForSectoralBackgroundData()
+    '####################################
+    ' Update fuels according to LEAP
+    '####################################
+    DIM dictFuels : SET dictFuels = CreateObject("Scripting.Dictionary")
+
+    ' Define Biomass fuels
+    dictFuels.Add "arrBiomassFuels", Array("Wood", "Biogas", "Charcoal", "Ethanol feedstock", "Vegetal Wastes", _
+                                            "Bio diesel feedstock")
+
+    ' Define Solid fuels (not including biomass)
+    dictFuels.Add "arrSolidFuels", Array("Coal", "Bitumen")
+
+    ' Define Liquid fuels
+    dictFuels.Add "arrLiquidFuels", Array("Diesel", "Gasoline", "Gasoline premix", "Jet Kerosene", "Kerosene", _
+                                        "LPG", "Residual Fuel Oil", "Crude Oil", "Ethanol", _
+                                        "Biodiesel", "HFO")
+
+    ' Define Gaseous fuels
+    dictFuels.Add "arrGaseousFuels", Array("LNG", "Natural Gas")
+
+    ' Aviation gasoline
+    dictFuels.Add "arrAviationGasoline", Array("Aviation gasoline")
+    ' Jet kerosene
+    dictFuels.Add "arrJetKerosene", Array("Jet Kerosene", "Kerosene")
+    ' Gasoline
+    dictFuels.Add "arrGasoline", Array("Gasoline")
+    ' Diesel oil
+    dictFuels.Add "arrDieselOil", Array("Diesel")
+    ' Liquefied petroleum gases (LPG)
+    dictFuels.Add "arrLPG", Array("LPG")
+
+    SET GetFuelsForSectoralBackgroundData = dictFuels
+END FUNCTION
+
+
+'######################################################################################
+' Define variables - Table 2 Sectoral report for industrial processes and product use
+'######################################################################################
+FUNCTION GetCodesForSectoralReportForIndustrial()
+    GetCodesForSectoralReportForIndustrial = Array("2.A.",_
+                                                    "2.A.1.", "2.A.2.", "2.A.3.", "2.A.4.",_
+                                                    "2.B.",_
+                                                    "2.B.1.", "2.B.2.", "2.B.3.", "2.B.4.", "2.B.5.", "2.B.6.", "2.B.7.", "2.B.8.", "2.B.9.", "2.B.10.",_
+                                                    "2.C.",_
+                                                    "2.C.1.", "2.C.2.", "2.C.3.", "2.C.4.", "2.C.5.", "2.C.6.", "2.C.7.",_
+                                                    "2.D.",_
+                                                    "2.D.1.", "2.D.2.", "2.D.3.",_
+                                                    "2.E.",_
+                                                    "2.E.1.", "2.E.2.", "2.E.3.", "2.E.4.", "2.E.5.",_
+                                                    "2.F.",_
+                                                    "2.F.1.", "2.F.2.", "2.F.3.", "2.F.4.", "2.F.5.", "2.F.6.",_
+                                                    "2.G.",_
+                                                    "2.G.1.", "2.G.2.", "2.G.3.", "2.G.4.")
+END FUNCTION
+
+' Match column names in Table 2
+FUNCTION GetPollutantsForSectoralReportForIndustrial()
+    GetPollutantsForSectoralReportForIndustrial = Array(strCO2,_
+                                                    strCH4, _
+                                                    strN2O, _
+                                                    "HFCs", _
+                                                    "PFCs", _
+                                                    "HFCs_Mix", _
+                                                    "SF6",_
+                                                    "NF3",_
+                                                    "NOx",_
+                                                    "CO",_
+                                                    "NMVOC",_
+                                                    "SOx")
+END FUNCTION
+
+'######################################################################################
+' Define variables - Table 3 Sectoral report for agriculture
+'######################################################################################
+FUNCTION GetCodesForSectoralReportForAgriculture()
+    GetCodesForSectoralReportForAgriculture = Array("3.A.", "3.A.1.",_
+                                                    "3.A.1.a.", "3.A.1.b.",_
+                                                    "3.A.2.", "3.A.3.", "3.A.4.",_
+                                                    "3.B.", "3.B.1.",_
+                                                    "3.B.1.a.", "3.B.1.b.",_
+                                                    "3.B.2.", "3.B.3.", "3.B.4.", "3.B.5.",_
+                                                    "3.C.",_
+                                                    "3.D.", "3.D.1.",_
+                                                    "3.D.1.a.", "3.D.1.b.", "3.D.1.c.", "3.D.1.d.", "3.D.1.e.", "3.D.1.f.", "3.D.1.g.",_
+                                                    "3.D.2.",_
+                                                    "3.E.", "3.F.", "3.G.", "3.H.", "3.I.", "3.J.")
+END FUNCTION
+
+' Match column names in Table 3
+FUNCTION GetPollutantsForSectoralReportForAgriculture()
+    GetPollutantsForSectoralReportForAgriculture = Array(strCO2,_
+                                                        strCH4, _
+                                                        strN2O, _
+                                                        "NOx", _
+                                                        "CO", _
+                                                        "NMVOC", _
+                                                        "SOx")
+END FUNCTION
+
+
+'######################################################################################
+' Define variables - Table 4 Sectoral report for land use, land-use change and forestry
+'######################################################################################
+FUNCTION GetCodesForSectoralReportForLandUse()
+    GetCodesForSectoralReportForLandUse = Array("4.A.", "4.A.1.", "4.A.2.",_
+                                                "4.B.", "4.B.1.", "4.B.2.",_
+                                                "4.C.", "4.C.1.", "4.C.2.",_
+                                                "4.D.", "4.D.1.", "4.D.2.",_
+                                                "4.E.", "4.E.1.", "4.E.2.",_
+                                                "4.F.", "4.F.1.", "4.F.2.",_
+                                                "4.G.", "4.H.")
+END FUNCTION
+
+' Match column names in Table 4
+FUNCTION GetPollutantsForSectoralReportForLandUse()
+    GetPollutantsForSectoralReportForLandUse = Array(strCH4, _
+                                                    strN2O, _
+                                                    "NOx", _
+                                                    "CO", _
+                                                    "NMVOC")
+
+END FUNCTION
+
 
 '######################################################################################
 ' Program
@@ -22,6 +190,9 @@ SUB MainScript
     SET LEAP = GetObject(, "LEAP.LEAPApplication")
     SET objExcelApp = CreateObject("Excel.Application")
     objExcelApp.Visible = True
+
+    CALL PopulateLEAPFuels()
+    CALL PopulateLEAPBranches()
 
     ' calculate the result
     LEAP.ActiveView = "Results" 'Switch result view
@@ -67,12 +238,14 @@ END FUNCTION
 FUNCTION GetBranchIndex(strCode)
     ' Find the branch index if the branch name ends with the giving code
     DIM objIndexList : SET objIndexList = CreateObject("System.Collections.ArrayList")
-    DIM intNum
-    FOR intNum = 1 TO LEAP.Branches.Count
-        DIM strBranchName : strBranchName = LEAP.Branches(intNum).Name
-        IF strCode = Right(strBranchName, Len(strCode)) THEN
-            objIndexList.Add intNum
-        END IF 
+    DIM intNum, tag
+    FOR EACH intNum IN objLEAPBranchList
+        FOR EACH tag IN LEAP.Branches(intNum).Tags
+            IF strCode = Right(tag.Name, Len(strCode)) THEN
+                objIndexList.Add intNum
+                EXIT FOR
+            END IF 
+        NEXT
     NEXT
     ' no match found, return -1
     SET GetBranchIndex = objIndexList
@@ -140,7 +313,15 @@ END FUNCTION
 
 FUNCTION GetFuelConsumption(intBranchIndex, strUnit, strFuel)
     On Error Resume Next
-    GetFuelConsumption = LEAP.Branches(intBranchIndex).Variable("Energy Demand Final Units").Value(intYear, strUnit, "Fuel="&strFuel)
+
+    IF InArray(arrLEAPFuels, strFuel) THEN
+        GetFuelConsumption = LEAP.Branches(intBranchIndex).Variable("Energy Demand Final Units").Value(intYear, strUnit, "Fuel="&strFuel)
+    ELSE
+        ' fuel not exist
+        PRINT "Fuel '" + strFuel + "' is not defined in LEAP"
+        GetFuelConsumption = 0
+    END IF
+    
     If Err.number <> 0 Then
         ' if there is an error finding the value, log it and output 0
         GetFuelConsumption = 0
@@ -153,7 +334,14 @@ FUNCTION GetEmission(intBranchIndex, strUnit, strPollutant, strFuel)
 
     DIM strFilter : strFilter = "Effect="&strPollutant
     IF NOT IsNull(strFuel) THEN
-        strFilter = strFilter & "|Fuel=" & strFuel
+        IF InArray(arrLEAPFuels, strFuel) THEN 
+            strFilter = strFilter & "|Fuel=" & strFuel
+        ELSE
+            ' fuel not exist
+            PRINT "Fuel '" + strFuel + "' is not defined in LEAP"
+            GetEmission = 0
+            EXIT FUNCTION
+        END IF
     END IF
 
     GetEmission = LEAP.Branches(intBranchIndex).Variable("Pollutant Loadings").Value(intYear, strUnit, strFilter)
@@ -164,46 +352,54 @@ FUNCTION GetEmission(intBranchIndex, strUnit, strPollutant, strFuel)
     End If
 END FUNCTION
 
+' add item to array
+FUNCTION ArrayAdd(arr, val)
+    ReDim Preserve arr(UBound(arr) + 1)
+    arr(UBound(arr)) = val
+    ArrayAdd = arr
+END FUNCTION
+
+' check item in array
+FUNCTION InArray(arr, val)
+    InArray = False
+    DIM item
+    FOR EACH item IN arr
+        IF item = val THEN
+            InArray = True
+            EXIT FOR
+        END IF
+    Next
+END FUNCTION
+
 
 '######################################################################################
 ' Subroutines
 '######################################################################################
 
+SUB PopulateLEAPFuels()
+    arrLEAPFuels = Array()
+    DIM objFuel
+    FOR EACH objFuel IN LEAP.Fuels
+        arrLEAPFuels = ArrayAdd(arrLEAPFuels, objFuel.Name)
+    NEXT
+END SUB
+
+SUB PopulateLEAPBranches()
+    SET objLEAPBranchList = CreateObject("System.Collections.ArrayList")
+    DIM intNum
+    FOR intNum = 1 TO LEAP.Branches.Count
+        IF LEAP.Branches(intNum).Tags.Count > 0 THEN
+            objLEAPBranchList.Add intNum
+        END IF 
+    NEXT
+END SUB
+
 ' SECTORAL REPORT FOR ENERGY - Table 1
 SUB ExportSectoralReportForEnergy()
     ' Define all the branches that we would like to extract data from
-    DIM arrCodes : arrCodes = Array("1.A.1.", _
-                                "1.A.1.a.", "1.A.1.b.", "1.A.1.c.", _
-                                "1.A.2.", _
-                                "1.A.2.a.", "1.A.2.b.", "1.A.2.c.", "1.A.2.d.", "1.A.2.e.", "1.A.2.f.", "1.A.2.g.", _
-                                "1.A.3.", _
-                                "1.A.3.a.", "1.A.3.b.", "1.A.3.c.", "1.A.3.d.", "1.A.3.e.", _
-                                "1.A.4.", _
-                                "1.A.4.a.", "1.A.4.b.", "1.A.4.c.", _
-                                "1.A.5.", _
-                                "1.A.5.a.", "1.A.5.b.", _
-                                "1.B.1.", _
-                                "1.B.1.a.", "1.B.1.b.", "1.B.1.c.", _
-                                "1.B.2.", _
-                                "1.B.2.a.", "1.B.2.b.", "1.B.2.c.", "1.B.2.d.", _
-                                "1.C.1.", _
-                                "1.C.2.", _
-                                "1.C.3.", _
-                                "1.D.1.", _
-                                "1.D.1.a.", "1.D.1.b.", _
-                                "1.D.2.", _
-                                "1.D.3.", _
-                                "1.D.4.", _
-                                "1.D.4.a.", "1.D.4.b." _
-                                )
+    DIM arrCodes : arrCodes = GetCodesForSectoralReportForEnergy()
     
-    DIM arrPollutants : arrPollutants = Array(strCO2,_
-                                        strCH4, _
-                                        strN2O, _
-                                        "NOx", _
-                                        "CO", _
-                                        "NMVOC", _
-                                        "SO2")
+    DIM arrPollutants : arrPollutants = GetPollutantsForSectoralReportForEnergy()
 
     DIM strCode
     FOR EACH strCode IN arrCodes
@@ -244,36 +440,11 @@ SUB ExportSectoralReportForEnergy()
     NEXT
 END SUB
 
-
-' Sectoral report for industrial processes and product use
+' Sectoral report for industrial processes and product use Table 2
 SUB ExportSectoralReportForIndustrial()
-    DIM arrCodes : arrCodes = Array("2.A.",_
-                                "2.A.1.", "2.A.2.", "2.A.3.", "2.A.4.",_
-                                "2.B.",_
-                                "2.B.1.", "2.B.2.", "2.B.3.", "2.B.4.", "2.B.5.", "2.B.6.", "2.B.7.", "2.B.8.", "2.B.9.", "2.B.10.",_
-                                "2.C.",_
-                                "2.C.1.", "2.C.2.", "2.C.3.", "2.C.4.", "2.C.5.", "2.C.6.", "2.C.7.",_
-                                "2.D.",_
-                                "2.D.1.", "2.D.2.", "2.D.3.",_
-                                "2.E.",_
-                                "2.E.1.", "2.E.2.", "2.E.3.", "2.E.4.", "2.E.5.",_
-                                "2.F.",_
-                                "2.F.1.", "2.F.2.", "2.F.3.", "2.F.4.", "2.F.5.", "2.F.6.",_
-                                "2.G.",_
-                                "2.G.1.", "2.G.2.", "2.G.3.", "2.G.4.")
+    DIM arrCodes : arrCodes = GetCodesForSectoralReportForIndustrial()
 
-    DIM arrPollutants : arrPollutants = Array(strCO2,_
-                                        strCH4, _
-                                        strN2O, _
-                                        "HFCs", _
-                                        "PFCs", _
-                                        "HFCs_Mix", _
-                                        "SF6",_
-                                        "NF3",_
-                                        "NOx",_
-                                        "CO",_
-                                        "NMVOC",_
-                                        "SOx")
+    DIM arrPollutants : arrPollutants = GetPollutantsForSectoralReportForIndustrial()
 
     DIM strCode
     FOR EACH strCode IN arrCodes
@@ -312,26 +483,10 @@ SUB ExportSectoralReportForIndustrial()
 END SUB
 
 
-' Sectoral report for agriculture
+' Sectoral report for agriculture - Table 3
 SUB ExportSectoralReportForAgriculture()
-    DIM arrCodes : arrCodes = Array("3.A.", "3.A.1.",_
-                                "3.A.1.a.", "3.A.1.b.",_
-                                "3.A.2.", "3.A.3.", "3.A.4.",_
-                                "3.B.", "3.B.1.",_
-                                "3.B.1.a.", "3.B.1.b.",_
-                                "3.B.2.", "3.B.3.", "3.B.4.", "3.B.5.",_
-                                "3.C.",_
-                                "3.D.", "3.D.1.",_
-                                "3.D.1.a.", "3.D.1.b.", "3.D.1.c.", "3.D.1.d.", "3.D.1.e.", "3.D.1.f.", "3.D.1.g.",_
-                                "3.D.2.",_
-                                "3.E.", "3.F.", "3.G.", "3.H.", "3.I.", "3.J.")
-    DIM arrPollutants : arrPollutants = Array(strCO2,_
-                                        strCH4, _
-                                        strN2O, _
-                                        "NOx", _
-                                        "CO", _
-                                        "NMVOC", _
-                                        "SOx")
+    DIM arrCodes : arrCodes = GetCodesForSectoralReportForAgriculture()
+    DIM arrPollutants : arrPollutants = GetPollutantsForSectoralReportForAgriculture()
 
     DIM strCode
     FOR EACH strCode IN arrCodes
@@ -371,20 +526,10 @@ SUB ExportSectoralReportForAgriculture()
 END SUB
 
 
-' Sectoral report for land use, land-use change and forestry
+' Sectoral report for land use, land-use change and forestry - Table 4
 SUB ExportSectoralReportForLandUse()
-    DIM arrCodes : arrCodes = Array("4.A.", "4.A.1.", "4.A.2.",_
-                                "4.B.", "4.B.1.", "4.B.2.",_
-                                "4.C.", "4.C.1.", "4.C.2.",_
-                                "4.D.", "4.D.1.", "4.D.2.",_
-                                "4.E.", "4.E.1.", "4.E.2.",_
-                                "4.F.", "4.F.1.", "4.F.2.",_
-                                "4.G.", "4.H.")
-    DIM arrPollutants : arrPollutants = Array(strCH4, _
-                                        strN2O, _
-                                        "NOx", _
-                                        "CO", _
-                                        "NMVOC")
+    DIM arrCodes : arrCodes = GetCodesForSectoralReportForLandUse()
+    DIM arrPollutants : arrPollutants = GetPollutantsForSectoralReportForLandUse()
 
     DIM strCode
     FOR EACH strCode IN arrCodes
@@ -477,31 +622,29 @@ SUB ExportSectoralBackgroundDataByFuel(objExcelWs, intBranchIndex, strCode, strF
 END SUB
 
 SUB ExportSectoralBackgroundData(objExcelWb, intBranchIndex, strCode)
+    DIM dictFuels : SET dictFuels = GetFuelsForSectoralBackgroundData()
     ' Define Biomass fuels
-    DIM arrBiomassFuels : arrBiomassFuels = Array("Wood", "Biogas", "Charcoal", "Ethanol feedstock", "Vegetal Wastes", _
-                                                "Biomass {unspecified}", "Bio diesel feedstock")
+    DIM arrBiomassFuels : arrBiomassFuels = dictFuels.Item("arrBiomassFuels")
 
     ' Define Solid fuels (not including biomass)
-    DIM arrSolidFuels : arrSolidFuels = Array("Coal {bituminous}", "Bitumen", "Coal {unspecified}")
+    DIM arrSolidFuels : arrSolidFuels = dictFuels.Item("arrSolidFuels")
 
     ' Define Liquid fuels
-    DIM arrLiquidFuels : arrLiquidFuels = Array("Diesel", "Gasoline", "Gasoline premix", "Jet Kerosene", "Kerosene", _
-                                                "LPG", "Residual Fuel Oil", "Crude Oil_imported", "Ethanol", _
-                                                "Biodiesel", "HFO")
+    DIM arrLiquidFuels : arrLiquidFuels = dictFuels.Item("arrLiquidFuels")
 
     ' Define Gaseous fuels
-    DIM arrGaseousFuels : arrGaseousFuels = Array("Natural Gas_Nigerian", "Natural gas _ indigenous", "LNG", "Natural Gas")
+    DIM arrGaseousFuels : arrGaseousFuels = dictFuels.Item("arrGaseousFuels")
 
     ' Aviation gasoline
-    DIM arrAviationGasoline : arrAviationGasoline = Array("Aviation gasoline")
+    DIM arrAviationGasoline : arrAviationGasoline = dictFuels.Item("arrAviationGasoline")
     ' Jet kerosene
-    DIM arrJetKerosene : arrJetKerosene = Array("Jet Kerosene", "Kerosene")
+    DIM arrJetKerosene : arrJetKerosene = dictFuels.Item("arrJetKerosene")
     ' Gasoline
-    DIM arrGasoline : arrGasoline = Array("Gasoline")
+    DIM arrGasoline : arrGasoline = dictFuels.Item("arrGasoline")
     ' Diesel oil
-    DIM arrDieselOil : arrDieselOil = Array("Diesel")
+    DIM arrDieselOil : arrDieselOil = dictFuels.Item("arrDieselOil")
     ' Liquefied petroleum gases (LPG)
-    DIM arrLPG : arrLPG = Array("LPG")
+    DIM arrLPG : arrLPG = dictFuels.Item("arrLPG")
 
 
     ' get worksheet by code
